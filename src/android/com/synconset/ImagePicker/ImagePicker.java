@@ -23,6 +23,7 @@ public class ImagePicker extends CordovaPlugin {
     private JSONObject params;
 
     public boolean execute(String action, final JSONArray args, final CallbackContext callbackContext) throws JSONException {
+        Log.d(TAG, "execute action =" + action + ",args =" + args);
         this.callbackContext = callbackContext;
         this.params = args.getJSONObject(0);
         if (action.equals("getPictures")) {
@@ -55,6 +56,7 @@ public class ImagePicker extends CordovaPlugin {
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG, "onActivityResult resultCode =" + resultCode + ",data =" + data);
         if (resultCode == Activity.RESULT_OK && data != null) {
             ArrayList<String> fileNames = data.getStringArrayListExtra("MULTIPLEFILENAMES");
             JSONArray res = new JSONArray(fileNames);

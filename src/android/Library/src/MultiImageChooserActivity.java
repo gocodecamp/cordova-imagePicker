@@ -543,6 +543,7 @@ public class MultiImageChooserActivity extends Activity implements OnItemClickLi
                 }
                 return al;
             } catch (IOException e) {
+                e.printstacktrace();
                 try {
                     asyncTaskError = e;
                     for (int i = 0; i < al.size(); i++) {
@@ -551,6 +552,7 @@ public class MultiImageChooserActivity extends Activity implements OnItemClickLi
                         file.delete();
                     }
                 } catch (Exception exception) {
+                    exception.printstacktrace();
                     // the finally does what we want to do
                 } finally {
                     return new ArrayList<String>();
