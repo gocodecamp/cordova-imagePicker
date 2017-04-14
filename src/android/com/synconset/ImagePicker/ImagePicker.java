@@ -15,19 +15,24 @@ import java.util.ArrayList;
 import android.app.Activity;
 import android.content.Intent;
 import android.util.Log;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.support.annotation.NonNull;
 
 public class ImagePicker extends CordovaPlugin {
     public static String TAG = "ImagePicker";
-
+    private static final String[] PERMISSIONS_STORAGE = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
+    private static final int REQUEST_CODE_STORAGE = 103;
     private CallbackContext callbackContext;
     private JSONObject params;
+    private Intent intent;
 
     public boolean execute(String action, final JSONArray args, final CallbackContext callbackContext) throws JSONException {
         Log.d(TAG, "execute action =" + action + ",args =" + args);
         this.callbackContext = callbackContext;
         this.params = args.getJSONObject(0);
         if (action.equals("getPictures")) {
-            Intent intent = new Intent(cordova.getActivity(), MultiImageChooserActivity.class);
+            intent = new Intent(cordova.getActivity(), MultiImageChooserActivity.class);
             int max = 20;
             int desiredWidth = 0;
             int desiredHeight = 0;
@@ -49,7 +54,12 @@ public class ImagePicker extends CordovaPlugin {
             intent.putExtra("HEIGHT", desiredHeight);
             intent.putExtra("QUALITY", quality);
             if (this.cordova != null) {
-                this.cordova.startActivityForResult((CordovaPlugin) this, intent, 0);
+                if (cordova.hasPermission(PERMISSIONS_STORAGE[0]) && cordova.hasPermission(PERMISSIONS_STORAGE[1])) {
+                    Log.d(TAG, "execute hasPermission true");
+                    this.cordova.startActivityForResult((CordovaPlugin) this, intent, 0);
+                } else {
+                    cordova.requestPermissions(this, REQUEST_CODE_STORAGE, PERMISSIONS_STORAGE);
+                }
             }
         }
         return true;
@@ -70,5 +80,29 @@ public class ImagePicker extends CordovaPlugin {
         } else {
             this.callbackContext.error("No images selected");
         }
+    }
+    @Override
+    public void onRequestPermissionResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) throws JSONException {
+        Log.d(TAG, "onRequestPermissionResult");
+        super.onRequestPermissionResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case REQUEST_CODE_STORAGE:
+                if (hasAllPermissionsGranted(grantResults)) {
+                    Log.d(TAG, "onRequestPermissionResult hasAllPermissionsGranted");
+                    this.cordova.startActivityForResult((CordovaPlugin) this, intent, 0);
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    private boolean hasAllPermissionsGranted(@NonNull int[] grantResults) {
+        for (int grantResult : grantResults) {
+            if (grantResult == PackageManager.PERMISSION_DENIED) {
+                return false;
+            }
+        }
+        return true;
     }
 }
